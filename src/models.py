@@ -105,6 +105,9 @@ class InventoryItem:
         self._validate(sku, on_hand)
         self.sku = sku
         self.on_hand = on_hand
+        
+    # Explicitly make the class unhashable
+    __hash__ = None
 
     def _validate(self, sku: str, on_hand: Quantity) -> None:
         if not isinstance(sku, str):
@@ -136,14 +139,14 @@ class InventoryItem:
         self._check_unit(qty)
         self.on_hand = qty
 
-    @property
-    def available(self) -> bool:
-        return self.on_hand.amount > 0
+    def available(self) -> Quantity:
+        return self.on_hand
     
     def __repr__(self) -> str:
-        return f"InventoryItem(sku='{self.sku}', on_hand={self.on_hand})"
+        return f"InventoryItem(sku='{self.sku!r}', on_hand={self.on_hand!r})"
+
     def __str__(self) -> str:
-        return f"SKU {self.sku} {self.amount} count on hand"
+        return f"SKU {self.sku} {self.on_hand.amount} {self.on_hand.unit} on hand"
     
     def __bool__(self) -> bool:
-        return self.available
+        return self.on_hand.amount > 0

@@ -1,7 +1,10 @@
 import pytest
 from decimal import Decimal
-from src.models import InventoryItem, InsufficientInventoryError
+from src.models import Quantity, InventoryItem, InsufficientInventoryError
 
-class InsufficientInventoryError(Exception):
-    """Raised when shipping more than is on hand."""
-    pass
+def sample_item():
+    return InventoryItem("WIDGET-101", Quantity(Decimal("50"), "count"))
+
+def test_on_hand_type_validation():
+    with pytest.raises(TypeError):
+        InventoryItem("SKU-1", "10 units")
