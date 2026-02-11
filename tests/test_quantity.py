@@ -1,10 +1,6 @@
 import pytest
 from decimal import Decimal
-from src.models import Quantity, InventoryItem, InsufficientInventoryError
-
-class InsufficientInventoryError(Exception):
-    """Raised when shipping more than is on hand."""
-    pass
+from src.models import Quantity, InsufficientInventoryError
 
 def test_repr_and_str():
     q = Quantity(Decimal("10.5"), "kg")
