@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from abc import ABC, abstractmethod
 from functools import total_ordering
+from typing import Union
 
 class InsufficientInventoryError(Exception):
    """Raised when attempting to ship/adjust below zero."""
@@ -40,9 +41,9 @@ class Quantity(Measurable):
     amount: Decimal
     unit: str
     def __post_init__(self) -> None:
-        # TODO: validate amount is Decimal, amount >= 0, unit lowercase and non-empty   
+          
         if not isinstance(self.amount, Decimal):
-            object.__setatt__(self, 'amount', Decimal(self.amount))
+            object.__setattr__(self, 'amount', Decimal(str(self.amount)))
 
         if self.amount < 0:
             raise ValueError(f"Amount must be non-negative, {self.amount}")
@@ -50,13 +51,13 @@ class Quantity(Measurable):
         if not isinstance(self.unit, str) or not self.unit.strip():
             raise ValueError("Unit must be a non-empty string")
         
-        object.__setattr__(self, 'unit', set.unit.lower().strip())
+        object.__setattr__(self, 'unit', self.unit.lower().strip())
 
     def __repr__(self) -> str:
-        return f"Amount(amount={self.amount!r}, unit={self.unit!r})"
+        return f"Quantity(amount={self.amount!r}, unit={self.unit!r})"
 
     def __str__(self) -> str:
-        return f"{self.unit} {self.amount}"
+        return f"{self.amount} {self.unit}"
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Quantity):
@@ -70,22 +71,30 @@ class Quantity(Measurable):
         if not isinstance(other, Quantity):
             return NotImplemented
         if self.unit != other.unit:
-            raise ValueError("Cannot compare quantities with different units")
+            raise ValueError(f"Cannot compare units {self.unit} and {other.unit}")
         return self.amount < other.amount
     
     def __add__(self, other):
         if not isinstance(other, Quantity):
             return NotImplemented
         if self.unit != other.unit:
-            raise ValueError("Cannot add unit values with different unit")
+            raise ValueError("Cannot add quantities with different units")
         return Quantity(self.amount + other.amount, self.unit)
 
     def __sub__(self, other):
         if not isinstance(other, Quantity):
             return NotImplemented
         if self.unit != other.unit:
-            raise ValueError("Cannot subtract unit values with different unit")
+            raise ValueError("Cannot subtract quantities with different units")
         return Quantity(self.amount - other.amount, self.unit)
+    
+    def __mul__(self, other: Union[int, Decimal]):
+        if not isinstance(other, (int, Decimal)):
+            return NotImplemented
+        return Quantity(self.amount * Decimal(str(other)), self.unit)
+    
+    def __rmul__(self, other: Union[int, Decimal]):
+        return self.__mul__(other)
 
     def is_zero(self) -> bool:
         return self.amount == Decimal("0")
@@ -112,15 +121,16 @@ class InventoryItem:
            
     def receive(self, qty: Quantity)-> None:
         self._check_unit(qty)
-        new_amount = self.on_hand.amount + qty.amount
-        self.on_hand = Quantity(new_amount, self.on_hand.unit)
+
+        self.on_hand += qty
 
     def ship(self, qty: Quantity)-> None:
         self._check_unit(qty)
         if qty.amount > self.on_hand.amount:
-            raise ValueError(f"Insufficient stock to ship {qty.amount}")
-        new_amount = self.on_hand.amount - qty.amount
-        self.on_hand = Quantity(new_amount, self.on_hand.unit)
+            raise InsufficientInventoryError(
+                f"Cannot ship {qty.amount}, only {self.on_hand.amount} available."
+            )      
+        self.on_hand -= qty
 
     def adjust(self, qty: Quantity) -> None:
         self._check_unit(qty)
