@@ -3,9 +3,9 @@
  ## Learning Objectives
 - Implement special methods to integrate custom objects into Python’s data model.
 - Design meaningful __repr__ and __str__ for different audiences.
-- mplement equality, ordering, and hashing correctly—especially under mutability
+- Implement equality, ordering, and hashing correctly—especially under mutability
   constraints.
-- ustify immutability and hashability decisions for value objects.
+- Justify immutability and hashability decisions for value objects.
 - Apply operator overloading responsibly and defensively.
 - Use an abstract base class to enforce behavioral contracts.
 
